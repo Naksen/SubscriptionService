@@ -1,0 +1,52 @@
+version: '3.9'
+
+services:
+  app:
+    build: .
+    container_name: sub_service
+    restart: unless-stopped
+    ports:
+      - 8000:8000
+
+    volumes:
+      - ./.env:/app/.env:ro
+    command: gunicorn --bind 0.0.0.0:8000 --workers 16 --worker-class uvicorn.workers.UvicornWorker apps.back.asgi
+
+    depends_on:
+      - redis
+      - postgres
+
+  celery:
+    build: .
+
+    container_name: sub_celery
+    restart: unless-stopped
+
+    command: python3 manage.py runscript celery --script-args 9 14
+    volumes:
+      - ./.env:/app/.env:ro
+      - ./log/:/var/log/
+
+  redis:
+    image: redis:7.4.0-alpine
+    container_name: redis
+    restart: unless-stopped
+    volumes:
+      - ./data/redis:/data
+    ports:
+      - 6379:6379
+
+  postgres:
+    image: postgres:15.8-alpine
+    container_name: sub_postgres
+    restart: unless-stopped
+
+    ports:
+      - 5432:5432
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+
+    environment:
+      - POSTGRES_USER=$DB_USER
+      - POSTGRES_PASSWORD=$DB_PASS
+      - POSTGRES_DB=$DB_NAME
