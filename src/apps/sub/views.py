@@ -3,7 +3,8 @@ from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 
-from . import serializers, types
+from .models import Plan
+from . import serializers, sub_types
 
 class TestViewSet(
     viewsets.GenericViewSet,
@@ -20,8 +21,13 @@ class TestViewSet(
         )
         request_serializer.is_valid(raise_exception=True)
 
-        typed_body: types.FakeNameUsername = request_serializer.validated_data # Пример того, как можно типизировать body
+        typed_body: sub_types.FakeNameUsername = request_serializer.validated_data # Пример того, как можно типизировать body
 
         response_serializer = serializers.CheckNameResponseSerializer(typed_body) # Также с помощью сериализаторов сериализуем объекты
 
         return Response(data=response_serializer.data, status=status.HTTP_200_OK)
+
+
+class PlanViewSet(viewsets.ModelViewSet):
+    queryset = Plan.objects.all()
+    serializer_class = serializers.PlanSerializer
