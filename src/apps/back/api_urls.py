@@ -18,6 +18,12 @@ router.register(
     basename="plans",
 )
 
+router.register(
+    r"sub",
+    sub_views.SubcriptionViewSet,
+    basename="sub",
+)
+
 urlpatterns = [
     path("", include(router.urls)), # Регистрация роутов
     path("schema/", SpectacularAPIView.as_view(), name="schema"),

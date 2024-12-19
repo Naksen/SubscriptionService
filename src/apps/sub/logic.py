@@ -12,11 +12,11 @@ from .models import Plan, Subscription, Payment as PaymentModel
 load_dotenv()
 
 class YooKassaClient:
-    def __init__(self, account_id: str, secret_key: str):
+    def __init__(cls, account_id: str, secret_key: str):
         Configuration.account_id = account_id
         Configuration.secret_key = secret_key
 
-    def create_payment(self, amount: float, currency: str, return_url: str, user_id: str,
+    def create_payment(cls, amount: float, currency: str, return_url: str, user_id: str,
                        save_payment_method: bool = False, description: str = None) -> dict:
         """
         Создает платеж, возвращает URL для оплаты и данные о платеже.
@@ -62,7 +62,7 @@ class YooKassaClient:
             "metadata": payment.metadata
         }
 
-    def cancel_payment(self, payment_id: str) -> dict:
+    def cancel_payment(cls, payment_id: str) -> dict:
         """
         Отменяет платеж в статусе waiting_for_capture.
 
@@ -76,7 +76,7 @@ class YooKassaClient:
             "cancellation_details": response.cancellation_details
         }
 
-    def get_user_payments_history(self, user_id: str, limit: int = 100, **list_params) -> list:
+    def get_user_payments_history(cls, user_id: str, limit: int = 100, **list_params) -> list:
         """
         Возвращает список платежей пользователя, фильтруя их по metadata.user_id.
         Параметр list_params можно использовать для передачи дополнительных параметров в Payment.list(),
@@ -109,7 +109,7 @@ class YooKassaClient:
                 })
         return user_payments
 
-    def get_payment(self, payment_id: str) -> dict:
+    def get_payment(cls, payment_id: str) -> dict:
         """
         Получает информацию о платеже по его идентификатору.
 
@@ -128,7 +128,7 @@ class YooKassaClient:
             "payment_method_id": payment.payment_method.id if payment.payment_method else None,
         }
 
-    def charge_autopayment(self, user_id: str, amount: float, currency: str, payment_method_id: str, description: str) -> dict:
+    def charge_autopayment(cls, user_id: str, amount: float, currency: str, payment_method_id: str, description: str) -> dict:
         """
         Совершает автоплатеж с сохраненным способом оплаты.
 
@@ -161,7 +161,7 @@ class YooKassaClient:
             "metadata": payment.metadata,
         }
 
-    def refund_payment(self, payment_id: str, amount: float, currency: str = "RUB") -> dict:
+    def refund_payment(cls, payment_id: str, amount: float, currency: str = "RUB") -> dict:
         """
         Возврат платежа.
 
@@ -190,12 +190,12 @@ class YooKassaClient:
 
 
 class SubscriptionLogic:
-    def __init__(self):
-        account_id = os.getenv("YOOKASSA_ACCOUNT_ID")
-        secret_key = os.getenv("YOOKASSA_SECRET_KEY")
-        self.yoo_client = YooKassaClient(account_id, secret_key)
+    account_id = os.getenv("YOOKASSA_ACCOUNT_ID")
+    secret_key = os.getenv("YOOKASSA_SECRET_KEY")
+    yoo_client = YooKassaClient(account_id, secret_key)
 
-    def create_subscription(self, plan_id: int, user_uuid: str, auto_renew: bool, return_url: str) -> str:
+    @classmethod
+    def create_subscription(cls, plan_id: int, user_uuid: str, auto_renew: bool, return_url: str) -> str:
         """
         Создать новую подписку и инициировать платеж.
 
@@ -221,7 +221,7 @@ class SubscriptionLogic:
         )
 
         # Создаем платеж через YooKassa
-        payment_data = self.yoo_client.create_payment(
+        payment_data = cls.yoo_client.create_payment(
             amount=float(plan.price),
             currency='RUB',
             return_url=return_url,
@@ -241,7 +241,8 @@ class SubscriptionLogic:
 
         return payment_data["confirmation_url"]
 
-    def get_user_subscriptions(self, user_uuid: str) -> Subscription:
+    @classmethod
+    def get_user_subscriptions(cls, user_uuid: str) -> Subscription:
         """
         Получить историю подписок по UUID пользователя.
 
@@ -250,7 +251,8 @@ class SubscriptionLogic:
         """
         return Subscription.objects.filter(user_uuid=user_uuid).order_by('-created_at')
 
-    def renew_subscription(self, subscription_id: int):
+    @classmethod
+    def renew_subscription(cls, subscription_id: int):
         """
         Продлить подписку через автоплатеж. Предполагается, что у подписки был сохранен способ оплаты.
 
@@ -267,7 +269,7 @@ class SubscriptionLogic:
             raise ValueError("No saved payment method found for this subscription")
 
         # Совершаем автоплатеж
-        payment_data = self.yoo_client.charge_autopayment(
+        payment_data = cls.yoo_client.charge_autopayment(
             user_id=str(subscription.user_uuid),
             amount=float(subscription.plan.price),
             currency='RUB',
@@ -291,7 +293,8 @@ class SubscriptionLogic:
 
         return payment_data
 
-    def renew_subscription_through_payment(self, subscription_id: int, return_url: str, auto_renew: bool) -> str:
+    @classmethod
+    def renew_subscription_through_payment(cls, subscription_id: int, return_url: str, auto_renew: bool) -> str:
         """
         Продлить подписку за счёт обычной оплаты (не автоплатежа).
         Возвращает ссылку на оплату. После оплаты можно обновить подписку.
@@ -307,7 +310,7 @@ class SubscriptionLogic:
         plan = subscription.plan
 
         # Создаем платеж через YooKassa. Здесь мы не сохраняем payment_method для автоплатежа.
-        payment_data = self.yoo_client.create_payment(
+        payment_data = cls.yoo_client.create_payment(
             amount=float(plan.price),
             currency='RUB',
             return_url=return_url,
@@ -330,7 +333,8 @@ class SubscriptionLogic:
 
         return payment_data["confirmation_url"]
 
-    def cancel_subscription(self, subscription_id: int, user_uuid: str):
+    @classmethod
+    def cancel_subscription(cls, subscription_id: int, user_uuid: str):
         """
         Отмена подписки.
         
