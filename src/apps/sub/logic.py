@@ -1,10 +1,15 @@
+import os
+from dotenv import load_dotenv
+
 import uuid
 from datetime import timedelta
 
 from django.utils import timezone
 from django.db import transaction
 from yookassa import Configuration, Payment, Refund
-from .models import Plan, Subscription, Payment
+from .models import Plan, Subscription, Payment as PaymentModel
+
+load_dotenv()
 
 class YooKassaClient:
     def __init__(self, account_id: str, secret_key: str):
@@ -185,7 +190,9 @@ class YooKassaClient:
 
 
 class SubscriptionLogic:
-    def __init__(self, account_id: str, secret_key: str):
+    def __init__(self):
+        account_id = os.getenv("YOOKASSA_ACCOUNT_ID")
+        secret_key = os.getenv("YOOKASSA_SECRET_KEY")
         self.yoo_client = YooKassaClient(account_id, secret_key)
 
     def create_subscription(self, plan_id: int, user_uuid: str, auto_renew: bool, return_url: str) -> str:
@@ -202,7 +209,8 @@ class SubscriptionLogic:
         now = timezone.now()
         end_date = now + timedelta(days=plan.duration)
 
-        # Создаем подписку
+        # Создаем подписку 
+        # TODO: Поменять статус на pending, нужно получить уведомление с юкассы после подтверждения платежа
         subscription = Subscription.objects.create(
             user_uuid=user_uuid,
             plan=plan,
@@ -223,7 +231,7 @@ class SubscriptionLogic:
         )
 
         # Сохраняем данные платежа в БД
-        Payment.objects.create(
+        PaymentModel.objects.create(
             subscription=subscription,
             amount=plan.price,
             user_uuid=user_uuid,
@@ -233,7 +241,7 @@ class SubscriptionLogic:
 
         return payment_data["confirmation_url"]
 
-    def get_user_subscriptions(self, user_uuid: str):
+    def get_user_subscriptions(self, user_uuid: str) -> Subscription:
         """
         Получить историю подписок по UUID пользователя.
 
@@ -273,7 +281,7 @@ class SubscriptionLogic:
             subscription.save()
 
             # Сохраняем новый платеж
-            Payment.objects.create(
+            PaymentModel.objects.create(
                 subscription=subscription,
                 amount=subscription.plan.price,
                 user_uuid=subscription.user_uuid,
@@ -309,7 +317,7 @@ class SubscriptionLogic:
         )
 
         # Сохраняем данные платежа в БД
-        Payment.objects.create(
+        PaymentModel.objects.create(
             subscription=subscription,
             amount=plan.price,
             user_uuid=subscription.user_uuid,
