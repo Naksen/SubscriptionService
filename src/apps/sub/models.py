@@ -1,5 +1,5 @@
 from django.db import models
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django_celery_beat.models import PeriodicTask
 
 
 class Plan(models.Model):
@@ -7,9 +7,8 @@ class Plan(models.Model):
     price = models.DecimalField(
         max_digits=10, decimal_places=2, verbose_name="Стоимость"
     )
-    month = models.IntegerField(
-        verbose_name="Количество месяцев",
-        validators=[MinValueValidator(1), MaxValueValidator(12)],
+    days = models.IntegerField(
+        verbose_name="Количество дней",
     )
 
     class Meta:
@@ -29,7 +28,7 @@ class Subscription(models.Model):
         ("pending", "Pending"),
     ]
 
-    user_uuid = models.UUIDField(verbose_name="UUID пользователя")
+    user_uuid = models.UUIDField(verbose_name="UUID пользователя", unique=True)
     plan = models.ForeignKey(
         Plan, on_delete=models.CASCADE, verbose_name="Тарифный план"
     )
@@ -51,9 +50,7 @@ class Subscription(models.Model):
 
 
 class Payment(models.Model):
-    subscription = models.ForeignKey(
-        Subscription, on_delete=models.CASCADE, verbose_name="Подписка"
-    )
+    subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, verbose_name="Подписка")
     amount = models.DecimalField(
         max_digits=10, decimal_places=2, verbose_name="Сумма платежа"
     )
@@ -71,3 +68,15 @@ class Payment(models.Model):
 
     def __str__(self) -> str:
         return f"Payment {self.id} for subscription {self.subscription_id}"
+
+class AutoSubscriptionTasks(models.Model):
+    subscription = models.ForeignKey(
+        Subscription, on_delete=models.CASCADE, verbose_name="Подписка", unique=True
+    )
+    task = models.ForeignKey(
+        PeriodicTask,
+        verbose_name="Задача на операцию, связанную с подпиской",
+        on_delete=models.CASCADE,
+        default=None,
+        help_text="Задача на операцию, связанную с подпиской",
+    )

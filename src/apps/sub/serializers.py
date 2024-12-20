@@ -15,7 +15,7 @@ class CheckNameResponseSerializer(serializers.Serializer):
 class PlanSerializer(serializers.ModelSerializer):
     class Meta:
         model = Plan
-        fields = ["id", "name", "price", "duration"]
+        fields = ["id", "name", "price", "days"]
 
 
 class CreateSubscriptionRequestSerializer(serializers.Serializer):
@@ -84,6 +84,8 @@ class SubscriptionRequestSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class RenewSubscriptionRequestSerializer(serializers.Serializer):
+    plan_id: int = serializers.IntegerField()
+    user_uuid: str = serializers.CharField()
     auto_renew: bool = serializers.BooleanField()
     return_url: str = serializers.CharField()
 

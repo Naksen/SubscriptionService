@@ -10,6 +10,17 @@ class CreateSubscription(TypedDict):
     auto_renew: bool
     return_url: str
 
-class RenewSubscription(TypedDict):
-    auto_renew: bool
-    return_url: str
+class RenewSubscription(CreateSubscription):
+    pass
+
+class RefundAmount(TypedDict):
+    value: float | None
+    currency: str | None
+
+class RefundResponse(TypedDict):
+    refund_id: str | None
+    status: str | None
+    payment_id: str | None
+    amount: RefundAmount | None
+    created_at: str | None
+    description: str | None
