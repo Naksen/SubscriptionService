@@ -205,6 +205,23 @@ class SubcriptionViewSet(viewsets.GenericViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+    @action(methods=["GET"], detail=False)
+    def get_user_payment_history(self, request: Request) -> Response:
+        """
+        Получение истории оплаты по user_uuid
+        """
+
+        user_uuid = request.query_params.get("user_uuid", None)
+
+        payments = models.Payment.objects.filter(user_uuid=user_uuid)
+
+        response_serializer = serializers.PaymentHistoryResponseSerializer(
+            payments,
+            many=True,
+        )
+
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+
     @extend_schema(
         request=serializers.PaymentNotificationRequestSerializer,
     )

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Plan, Subscription
+from .models import Plan, Subscription, Payment
 
 
 class CheckNameRequestSerializer(serializers.Serializer):
@@ -91,3 +91,8 @@ class RenewSubscriptionRequestSerializer(serializers.Serializer):
 
 class RenewSubscriptionResponseSerializer(CreateSubscriptionResponseSerializer):
     pass
+
+class PaymentHistoryResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = "__all__"
