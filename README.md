@@ -31,5 +31,5 @@ docker compose up --build -d
 ## Сваггер
 Адрес:
 ```
-http://localhost:8000/api/swagger/
+https://localhost:443/api/swagger/
 ```
