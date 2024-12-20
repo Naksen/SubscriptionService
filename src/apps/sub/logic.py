@@ -396,6 +396,7 @@ class SubscriptionLogic:
         :return: True, если возврат произошел, иначе False
         """
         import logging
+
         logger = logging.getLogger("sub")
         logger.info(f"Отменяем подписку пользователю {subscription.user_uuid}")
 
@@ -405,24 +406,27 @@ class SubscriptionLogic:
             .order_by("-id")
             .first()
         )
-        
+
         if last_payment:
             refund = cls.yoo_client.refund_payment(
-                payment_id=last_payment.yk_payment_id, amount=float(subscription.plan.price)
+                payment_id=last_payment.yk_payment_id,
+                amount=float(subscription.plan.price),
             )
-            
+
             logger.info(f"Статус возврата: {refund['status']}")
 
             if refund["status"] != "succeeded":
                 logger.info("Возврат не удался")
                 return False
-            
+
         subscription.status = "cancelled"
         subscription.save()
 
         if subscription.auto_renew:
             # Удаляем таску на автоматическую оплату
-            auto_payment = AutoSubscriptionTasks.objects.filter(subscription=subscription).first()
+            auto_payment = AutoSubscriptionTasks.objects.filter(
+                subscription=subscription
+            ).first()
 
             if auto_payment:
                 PeriodicTasksLogic.remove_periodic_task_with_clocked(auto_payment.task)
@@ -434,7 +438,9 @@ class SubscriptionLogic:
 
 class PeriodicTasksLogic:
     @classmethod
-    def create_stop_subscription_task(cls, subscription_id: int, days: int) -> PeriodicTask:
+    def create_stop_subscription_task(
+        cls, subscription_id: int, days: int
+    ) -> PeriodicTask:
         task_name = f"stop_subscription_{subscription_id}"
         task_path = "apps.sub.tasks.stop_subscription"
         stop_subscription_time = timezone.now() + timedelta(days=days)
@@ -451,7 +457,6 @@ class PeriodicTasksLogic:
             kwargs=json.dumps(task_kwargs),
             one_off=True,
         )
-
 
     @classmethod
     def create_auto_payment_task(cls, subscription_id: int, days: int) -> PeriodicTask:
@@ -481,4 +486,3 @@ class PeriodicTasksLogic:
 
         assert isinstance(clocked, ClockedSchedule)
         clocked.delete()
-

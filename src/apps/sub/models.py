@@ -50,7 +50,9 @@ class Subscription(models.Model):
 
 
 class Payment(models.Model):
-    subscription = models.ForeignKey(Subscription, on_delete=models.CASCADE, verbose_name="Подписка")
+    subscription = models.ForeignKey(
+        Subscription, on_delete=models.CASCADE, verbose_name="Подписка"
+    )
     amount = models.DecimalField(
         max_digits=10, decimal_places=2, verbose_name="Сумма платежа"
     )
@@ -68,6 +70,7 @@ class Payment(models.Model):
 
     def __str__(self) -> str:
         return f"Payment {self.id} for subscription {self.subscription_id}"
+
 
 class AutoSubscriptionTasks(models.Model):
     subscription = models.ForeignKey(

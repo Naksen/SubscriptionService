@@ -20,7 +20,7 @@ router.register(
 )
 
 urlpatterns = [
-    path("", include(router.urls)), # Регистрация роутов
+    path("", include(router.urls)),  # Регистрация роутов
     path("schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "swagger/",

@@ -78,10 +78,12 @@ class PaymentNotificationRequestSerializer(serializers.Serializer):
     event = serializers.CharField()
     object = PaymentNotificationObjectSerializer()
 
+
 class SubscriptionRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
         fields = "__all__"
+
 
 class RenewSubscriptionRequestSerializer(serializers.Serializer):
     plan_id: int = serializers.IntegerField()
@@ -89,8 +91,10 @@ class RenewSubscriptionRequestSerializer(serializers.Serializer):
     auto_renew: bool = serializers.BooleanField()
     return_url: str = serializers.CharField()
 
+
 class RenewSubscriptionResponseSerializer(CreateSubscriptionResponseSerializer):
     pass
+
 
 class PaymentHistoryResponseSerializer(serializers.ModelSerializer):
     class Meta:

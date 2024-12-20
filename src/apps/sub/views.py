@@ -41,7 +41,7 @@ class SubcriptionViewSet(viewsets.GenericViewSet):
                 {"detail": "user with the same uuid already has the subscription"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         if Plan.objects.filter(pk=create_sub_body["plan_id"]).exists() is False:
             return Response(
                 {"detail": "plan not found"},
@@ -101,7 +101,9 @@ class SubcriptionViewSet(viewsets.GenericViewSet):
             request_serializer.validated_data
         )  # type: ignore
 
-        subscription = Subscription.objects.filter(user_uuid=renew_subscription["user_uuid"]).first()
+        subscription = Subscription.objects.filter(
+            user_uuid=renew_subscription["user_uuid"]
+        ).first()
         if subscription is None:
             return Response(
                 {"detail": "Subscription not found"}, status=status.HTTP_404_NOT_FOUND
@@ -109,7 +111,8 @@ class SubcriptionViewSet(viewsets.GenericViewSet):
 
         if subscription.status != "cancelled":
             return Response(
-                {"detail": "Subscription is not cancelled"}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Subscription is not cancelled"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
         create_sub_response = (
@@ -193,17 +196,20 @@ class SubcriptionViewSet(viewsets.GenericViewSet):
 
         if subscription.auto_renew:
             # Удаляем таску на автоматическую оплату
-            auto_payment = models.AutoSubscriptionTasks.objects.filter(subscription=subscription).first()
+            auto_payment = models.AutoSubscriptionTasks.objects.filter(
+                subscription=subscription
+            ).first()
 
             if auto_payment:
-                logic.PeriodicTasksLogic.remove_periodic_task_with_clocked(auto_payment.task)
+                logic.PeriodicTasksLogic.remove_periodic_task_with_clocked(
+                    auto_payment.task
+                )
 
                 auto_payment.delete()
 
         subscription.delete()
 
         return Response(status=status.HTTP_204_NO_CONTENT)
-
 
     @action(methods=["GET"], detail=False)
     def get_user_payment_history(self, request: Request) -> Response:
@@ -282,8 +288,10 @@ class SubcriptionViewSet(viewsets.GenericViewSet):
                 )
 
             else:
-                # Создаем таску на остановку подписки по её окончанию 
-                stop_sub_task = logic.PeriodicTasksLogic.create_stop_subscription_task(subscription.pk, subscription.plan.days)
+                # Создаем таску на остановку подписки по её окончанию
+                stop_sub_task = logic.PeriodicTasksLogic.create_stop_subscription_task(
+                    subscription.pk, subscription.plan.days
+                )
                 models.AutoSubscriptionTasks.objects.create(
                     subscription=subscription, task=stop_sub_task
                 )

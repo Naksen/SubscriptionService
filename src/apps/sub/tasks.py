@@ -42,6 +42,7 @@ def make_autopayment(subscription_id: int) -> None:
     else:
         auto_payment.delete()
 
+
 @shared_task
 def stop_subscription(subscription_id: int) -> None:
     """
