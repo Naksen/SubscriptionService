@@ -45,7 +45,7 @@ class SubcriptionViewSet(viewsets.GenericViewSet):
         if Plan.objects.filter(pk=create_sub_body["plan_id"]).exists() is False:
             return Response(
                 {"detail": "plan not found"},
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         create_sub_response = logic.SubscriptionLogic.create_subscription(
@@ -104,7 +104,7 @@ class SubcriptionViewSet(viewsets.GenericViewSet):
         subscription = Subscription.objects.filter(user_uuid=renew_subscription["user_uuid"]).first()
         if subscription is None:
             return Response(
-                {"detail": "Subscription not found"}, status=status.HTTP_400_BAD_REQUEST
+                {"detail": "Subscription not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
         if subscription.status != "cancelled":
@@ -145,7 +145,7 @@ class SubcriptionViewSet(viewsets.GenericViewSet):
         if subscription is None:
             return Response(
                 {"detail": "subscription not found"},
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         if subscription.status != "active":
@@ -182,7 +182,7 @@ class SubcriptionViewSet(viewsets.GenericViewSet):
         if subscription is None:
             return Response(
                 {"detail": "subscription not found"},
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_404_NOT_FOUND,
             )
 
         if subscription.status != "cancelled":
@@ -212,6 +212,12 @@ class SubcriptionViewSet(viewsets.GenericViewSet):
         """
 
         user_uuid = request.query_params.get("user_uuid", None)
+
+        if user_uuid is None:
+            return Response(
+                {"detail": "user_uuid is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         payments = models.Payment.objects.filter(user_uuid=user_uuid)
 

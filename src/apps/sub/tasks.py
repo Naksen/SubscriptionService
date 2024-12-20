@@ -30,6 +30,7 @@ def make_autopayment(subscription_id: int) -> None:
     # Выполняем автоплатеж
     if logic.SubscriptionLogic.renew_subscription(subscription_id) is not None:
         # Создаем снова таску на продление подписки
+        logger.info("Платеж прошел успешно")
         subscription = models.Subscription.objects.get(pk=subscription_id)
         auto_payment_task = logic.PeriodicTasksLogic.create_auto_payment_task(
             subscription.pk, subscription.plan.days
