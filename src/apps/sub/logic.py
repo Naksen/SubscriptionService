@@ -350,8 +350,10 @@ class SubscriptionLogic:
         Продлить можно только cancelled подписку.
         Возвращает ссылку на оплату. После оплаты можно обновить подписку.
 
+        :param plan_id: ID плана
         :param subscription_id: ID подписки
         :param return_url: URL для возвращения после оплаты
+        :param auto_renew: Автоплатеж
         :return: URL для оплаты
         """
         plan = Plan.objects.get(id=plan_id)
@@ -435,9 +437,7 @@ class PeriodicTasksLogic:
     def create_stop_subscription_task(cls, subscription_id: int, days: int) -> PeriodicTask:
         task_name = f"stop_subscription_{subscription_id}"
         task_path = "apps.sub.tasks.stop_subscription"
-        # TODO: раскомментить
-        # make_autopayment_time = timezone.now() + timedelta(days=days)
-        stop_subscription_time = timezone.now() + timedelta(seconds=30)
+        stop_subscription_time = timezone.now() + timedelta(days=days)
         task_kwargs = {"subscription_id": subscription_id}
 
         clocked_schedule = ClockedSchedule.objects.create(
@@ -457,9 +457,7 @@ class PeriodicTasksLogic:
     def create_auto_payment_task(cls, subscription_id: int, days: int) -> PeriodicTask:
         task_name = f"auto_payment_{subscription_id}"
         task_path = "apps.sub.tasks.make_autopayment"
-        # TODO: раскомментить
-        # make_autopayment_time = timezone.now() + timedelta(days=days)
-        make_autopayment_time = timezone.now() + timedelta(seconds=30)
+        make_autopayment_time = timezone.now() + timedelta(days=days)
         task_kwargs = {"subscription_id": subscription_id}
 
         clocked_schedule = ClockedSchedule.objects.create(
