@@ -1,12 +1,20 @@
 ### SubscriptionService
 ## Запуск
-Прописать
+Необходимо:
+
+1. Создать .env файл на основе .env.example
+```
+cp .env.example .env
+```
+И исправить YOOKASSA_ACCOUNT_ID и YOOKASSA_SECRET_KEY на свои данные
+
+2. Прописать
 ```
 docker compose up --build -d
 docker exec -it sub_service python3 manage.py migrate
 docker exec -it sub_service python3 manage.py collectstatic
 ```
-После этого перезапустить
+2. После этого перезапустить
 ```
 docker compose up --build -d
 ```
