@@ -6,11 +6,6 @@ from apps.sub import views as sub_views
 
 router = DefaultRouter()
 
-router.register(
-    r"subscription",
-    sub_views.TestViewSet,
-    basename="subscription",
-)
 
 router.register(
     r"plans",

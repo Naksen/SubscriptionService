@@ -214,7 +214,7 @@ class SubscriptionLogic:
         subscription = Subscription.objects.create(
             user_uuid=user_uuid,
             plan=plan,
-            status='active',  # возможно стоит сделать 'pending', если вы хотите активировать после успешной оплаты
+            status='pending',  # возможно стоит сделать 'pending', если вы хотите активировать после успешной оплаты
             start_date=now,
             end_date=end_date,
             auto_renew=auto_renew,
@@ -227,7 +227,7 @@ class SubscriptionLogic:
             return_url=return_url,
             user_id=user_uuid,
             save_payment_method=auto_renew,  # Если автопродление, то сохраняем способ оплаты
-            description=f"Subscription {subscription.id} for user {user_uuid}"
+            description=f"Subscription {subscription.pk} for user {user_uuid}"
         )
 
         # Сохраняем данные платежа в БД
@@ -242,14 +242,14 @@ class SubscriptionLogic:
         return payment_data["confirmation_url"]
 
     @classmethod
-    def get_user_subscriptions(cls, user_uuid: str) -> Subscription:
+    def get_user_subscriptions(cls, user_uuid: str) -> Subscription | None:
         """
         Получить историю подписок по UUID пользователя.
 
         :param user_uuid: UUID пользователя
         :return: QuerySet или список подписок
         """
-        return Subscription.objects.filter(user_uuid=user_uuid).order_by('-created_at')
+        return Subscription.objects.filter(user_uuid=user_uuid).order_by('-created_at').first()
 
     @classmethod
     def renew_subscription(cls, subscription_id: int):
@@ -264,7 +264,7 @@ class SubscriptionLogic:
             raise ValueError("Subscription cannot be renewed automatically")
 
         # Находим последний платеж с сохраненным способом оплаты (yk_payment_method_id)
-        last_payment = Payment.objects.filter(subscription=subscription).exclude(yk_payment_method_id__isnull=True).order_by('-id').first()
+        last_payment = PaymentModel.objects.filter(subscription=subscription).exclude(yk_payment_method_id__isnull=True).order_by('-id').first()
         if not last_payment or not last_payment.yk_payment_method_id:
             raise ValueError("No saved payment method found for this subscription")
 

@@ -9,3 +9,7 @@ class CreateSubscription(TypedDict):
     user_uuid: str
     auto_renew: bool
     return_url: str
+
+class RenewSubscription(TypedDict):
+    auto_renew: bool
+    return_url: str

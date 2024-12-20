@@ -174,3 +174,7 @@ cython_debug/
 
 # Logs
 /log
+
+# crt
+*.crt
+*.key
